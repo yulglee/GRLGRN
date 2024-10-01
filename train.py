@@ -57,7 +57,6 @@ for i, edge in enumerate(training_adj_list):
         A = torch.cat([A, edge.to_dense().type(torch.FloatTensor).unsqueeze(0)], dim=0)
 A = torch.cat([A, torch.eye(num_nodes).type(torch.FloatTensor).unsqueeze(0)], dim=0)
 training_adjs_m = A.to(args.device)
-# 存储路径
 node_embedding = torch.from_numpy(Gene_exp).type(torch.FloatTensor).to(args.device)
 model = GRLGRN(num_gene=len(Gene_exp), args=args, num_implicit_edge_types=training_adjs_m.size()[0],
                num_implicit_links=args.num_implicit_links,
@@ -65,7 +64,7 @@ model = GRLGRN(num_gene=len(Gene_exp), args=args, num_implicit_edge_types=traini
                output_dim=args.output_dim,
                device=args.device).to(args.device)
 node_feature = node_embedding.detach()
-optim_function = torch.optim.Adam(model.parameters(), lr=args.lr) #args.lr
+optim_function = torch.optim.Adam(model.parameters(), lr=args.lr)
 Validata_auc = []
 for epoch in range(1, args.epoch+1):  # args.epoch
     running_loss = 0.0
