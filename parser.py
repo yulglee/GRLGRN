@@ -17,27 +17,21 @@ def parser_add_main_args(parser):
     parser.add_argument('--seed', type=int, default=3047, help='seed')
 def get_train_parameter(name:str):
     if name == 'STRING Dataset':
-        lr = 0.0002  # 原先0.0002
+        lr = 0.0002 
         pre_loss_cof = 1
         contra_loss_cof = 0
         use_contra_learning = False
-        epoch = 20 # 原先为20
-    if name == 'Specific Dataset':  #hESC mDC
+        epoch = 20
+    if name == 'Specific Dataset': 
         lr = 0.0002
         pre_loss_cof = 1
         contra_loss_cof = 0
-        epoch = 50
-        use_contra_learning = False
-    if name == 'Lofgof Dataset':
-        lr = 0.00015555
-        pre_loss_cof = 1
-        contra_loss_cof = 1
         epoch = 50
         use_contra_learning = False
     if name == 'Non-Specific Dataset':
         lr = 0.0002
         pre_loss_cof = 0.2
         contra_loss_cof = 0.8
-        epoch = 45  # 现有结果 0.2；0.8
+        epoch = 45
         use_contra_learning = True
     return lr, pre_loss_cof, contra_loss_cof, use_contra_learning, epoch
