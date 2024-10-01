@@ -30,7 +30,7 @@ The architecture of inference model GRLGRN consists of gene embedding module, fe
  ![Model Architecture](https://github.com/yulglee/GRLGRN/blob/main/GRLGRN_model.jpg)
  - The file .pth is the GRLGRN model trained on the training subset of the corresponding scRNA-seq dataset.
  - To train the model, we can run `train.py` script using the training dataset. We can also run `test.py` to test the model
-### 3.3 **script**
+### 3.3 **Script**
 - `utils.py` randomly splits scRNA-seq datasets and feed them into the GRLGRN in batchsizes for training, validation, and testing.
 - `utils2.py` converts a prior GRN into subgraphs and preprocesses gene expression profile data.
 - `parser.py` defines the relevant hyperparameters in GRLGRN.
