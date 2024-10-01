@@ -4,26 +4,22 @@ from contrastive_learning import *
 class GRLGRN(nn.Module):
     def __init__(self, num_gene, args, input_dim, output_dim, num_implicit_edge_types, num_implicit_links, device):
         super(GRLGRN, self).__init__()
-        self.out_channels = num_implicit_links  # 通道数：输出矩阵链接数
-        self.input_dim = input_dim  # 输入特征维数
-        self.out_dim = output_dim  # 输出特征维数
+        self.out_channels = num_implicit_links 
+        self.input_dim = input_dim  
+        self.out_dim = output_dim 
         self.args = args
         self.batch_normal = nn.BatchNorm1d(input_dim)
         self.normal_layer = nn.LayerNorm(output_dim)
         self.device = device
         layers = []
-        # layers.append(Iner_pro_Layer(num_implicit_edge_types, num_implicit_links, first=True))
         layers.append(Iner_pro_Layer(num_implicit_edge_types, num_implicit_links))
         self.layers = nn.ModuleList(layers)[0]
         self.weight = nn.Parameter(torch.Tensor(self.input_dim, self.out_dim))
-        # 注意力模块
         self.CBAM = CBAMBlock(channel=num_gene, reduction=10, kernel_size=int(np.sqrt(self.out_dim)))
-        # 相互作用预测器
         self.Pri_predictor = nn.Sequential(
             nn.Linear(self.out_dim, int(self.out_dim/2), bias=True),
             nn.ReLU(),
             nn.Linear(int(self.out_dim/2), 1))
-        # 图对比学习
         self.contra_layer = Augement_frature_layer(device=self.device)
         self.contra_loss = Contrast_loss(self.args)
         self.device = device
@@ -35,29 +31,28 @@ class GRLGRN(nn.Module):
         X = torch.mm(X, self.weight)
         H = self.adj_norm(H, add=True)
         return torch.mm(H, X)
-    def adj_norm(self, H, add):  # 将输入到GCN中的矩阵进行正则化：输入-未正ｈｇ则化的链接矩阵；输出-正则化后的链接矩阵
+    def adj_norm(self, H, add):
         H = H.t()
         if add == False:
             H = H*((torch.eye(H.shape[0])==0).type(torch.FloatTensor)).to(self.device)
         else:
             H = H*((torch.eye(H.shape[0])==0).type(torch.FloatTensor)).to(self.device) + torch.eye(H.shape[0]).type(torch.FloatTensor).to(self.device)
         deg = torch.sum(H, dim=1)
-        deg_inv = deg.pow(-1)  # 计算每个元素的倒数的
-        deg_inv[deg_inv == float('inf')] = 0  # 将负无穷的置为零
+        deg_inv = deg.pow(-1)
+        deg_inv[deg_inv == float('inf')] = 0 
         deg_inv = deg_inv.to(self.device)*torch.eye(H.shape[0]).type(torch.FloatTensor).to(self.device)
         H = torch.mm(deg_inv, H)
         H = H.t()
         return H
 
-    def GRN_link_pre(self, h, gene_pairs):  # 主预测器预测
+    def GRN_link_pre(self, h, gene_pairs): 
         Regulator_embedding = h[gene_pairs[:, 0]]
         Target_embedding = h[gene_pairs[:, 1]]
         dual_interation_embedding = F.relu(Regulator_embedding * Target_embedding)
         pre = self.Pri_predictor(dual_interation_embedding)
         return pre
 
-    def forward(self, X, A, gene_pairs, adj_tensor,  use_con_learning=True, test=False):  # X为原始的输入, A为GTN的输入的链接矩阵, adj_tensor为训练集正样本的tensor形式
-        # 主通路
+    def forward(self, X, A, gene_pairs, adj_tensor,  use_con_learning=True, test=False):
         A = A.unsqueeze(0)
         Ws = []
         H, W = self.layers(A)
@@ -72,16 +67,9 @@ class GRLGRN(nn.Module):
                 X_list.append(X_tmp)
         # mix_attention
         X_ = torch.stack(X_list, dim=0)
-        # CBAM模块
         gene_mix_embedding = self.CBAM(X_)
-        # #mean模块
-        # gene_mix_embedding = torch.mean(X_, dim=0)
-
-
-        # 预测相互作用
         pre = self.GRN_link_pre(gene_mix_embedding, gene_pairs)
         labeled_pri_pre = torch.sigmoid(pre)  # labeled_pre
-        # 对比学习损失函数
         if use_con_learning == True:
             aux_feature, edge_index = self.contra_layer(x=X, edge_idx=adj_tensor.T, drop_rate=[0.2, 0.4], drop_out=True)
             adj_size = len(aux_feature)
@@ -123,5 +111,5 @@ class basic_links_parameterization(nn.Module):
             nn.init.uniform_(self.bias, -bound, bound)
 
     def forward(self, A):
-        A = torch.sum(A*F.softmax(self.weight, dim=1), dim=1)  # 逐元素相乘
+        A = torch.sum(A*F.softmax(self.weight, dim=1), dim=1) 
         return A
