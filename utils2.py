@@ -14,18 +14,18 @@ class G_vocab():
         self.type = type
 
 
-def get_type_genes_dict(exp_path, TF_list_file):  # get different type of gene
+def get_type_genes_dict(exp_path, TF_list_file): 
     type_gene_dict = {}
     exp = Pd.read_csv(exp_path, index_col=0).values
     nodes_num = np.arange(len(exp))
-    All_TF_list = Pd.read_csv(TF_list_file, index_col=0)["index"].values  # Regulator gene index
-    Target_only = np.setdiff1d(nodes_num, All_TF_list) #Target gene index
+    All_TF_list = Pd.read_csv(TF_list_file, index_col=0)["index"].values 
+    Target_only = np.setdiff1d(nodes_num, All_TF_list)
     assert len(nodes_num) == len(Target_only) + len(All_TF_list)
     type_gene_dict[0] = All_TF_list  # 0: Regulator gene
     type_gene_dict[1] = Target_only  # 1:Target gene
     return type_gene_dict, nodes_num
 
-def get_node2vocab(type_gene_dict):  # 修改
+def get_node2vocab(type_gene_dict): 
     gene_type_dict = {}
     for type, _ in type_gene_dict.items():
         for node in type_gene_dict[type]:
@@ -83,7 +83,6 @@ def get_train_exp_adj_pairs(type_gene_dict, train_set_file, exp_data_file, type=
     TF_TF_index = np.vstack((np.array(TF_TF_row), np.array(TF_TF_col)))  # TF_TF directed graph
     TF_Target_index = np.vstack((np.array(TF_Target_row), np.array(TF_Target_col))) # TF_Target directed graph
 
-    #  索引转化为稀疏矩阵存储格式
     if directed == True:
         TF_TF_sqarse_numpy = sp.coo_matrix(
             (np.ones(TF_TF_index.shape[1]), (TF_TF_index[0, :], TF_TF_index[1, :])),
@@ -153,7 +152,7 @@ def get_train_exp_adj_pairs(type_gene_dict, train_set_file, exp_data_file, type=
 def load_positive_negative_pair(data_pair, directed=False):
     data_original_positive_edges = np.array([edge[:2] for edge in data_pair if edge[2] == 1], dtype=np.int32)
     data_original_negative_edges = np.array([edge[:2] for edge in data_pair if edge[2] == 0], dtype=np.int32)  # 会出现相同的索引
-    if not directed:  # not为取反操作-输入为False时才会执行
+    if not directed:
         data_original_positive_edges = np.concatenate((data_original_positive_edges,
                                                        data_original_positive_edges[:, [1, 0]]), axis=0)
         data_original_negative_edges = np.concatenate((data_original_negative_edges,
@@ -175,13 +174,13 @@ def load_data_csv(exp_data_file, train_set_file, validate_set_file, test_data_fi
     gene_network_adj = sp.csr_matrix((value, (all_edges[:, 0], all_edges[:, 1])),
                                      shape=(gene_net_work_num, gene_net_work_num))
 
-    train_pos_values = np.ones(training_pos_edges.shape[0])  # 训练集中正样本的标签
+    train_pos_values = np.ones(training_pos_edges.shape[0])
     train_pos_adj = sp.csr_matrix((train_pos_values, (training_pos_edges[:, 0], training_pos_edges[:, 1])),
-                                  shape=(gene_net_work_num, gene_net_work_num))  # 训练集正样本组成的adj
+                                  shape=(gene_net_work_num, gene_net_work_num))
 
-    train_neg_values = np.ones(training_neg_edges.shape[0])  # 训练集中正样本的标签
+    train_neg_values = np.ones(training_neg_edges.shape[0])
     train_neg_adj = sp.csr_matrix((train_neg_values, (training_neg_edges[:, 0], training_neg_edges[:, 1])),
-                                  shape=(gene_net_work_num, gene_net_work_num))  # 训练集正样本组成的adj
+                                  shape=(gene_net_work_num, gene_net_work_num))
 
     return gene_exp, gene_network_adj, train_pos_adj, train_neg_adj, training_pos_edges, training_neg_edges, \
         validate_pos_edges, validate_neg_edges, \
