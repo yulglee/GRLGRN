@@ -1,0 +1,4 @@
+Total training time: 6161.85 seconds
+Initial GPU memory usage: 2173 MB
+Final GPU memory usage: 2173 MB
+Peak GPU memory usage: 2173 MB
